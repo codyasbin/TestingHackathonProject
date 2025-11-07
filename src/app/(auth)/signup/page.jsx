@@ -8,6 +8,7 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {authService} from "@/services/authservices";
 
 export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
