@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-
+import { useRouter } from "next/navigation"
 export default function BookingModal({ provider, onClose, onBook }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -24,7 +25,8 @@ export default function BookingModal({ provider, onClose, onBook }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     onBook(formData)
-    alert("Booking request sent! You will receive a confirmation shortly.")
+    // alert("Booking request sent! You will receive a confirmation shortly.")
+    router.push("/checkout");
   }
 
   return (
