@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {useForm} from "react-hook-form";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,7 +13,7 @@ export default function SignupPage() {
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: {errors},
   } = useForm();
 
   const password = watch("password");
@@ -26,8 +26,8 @@ export default function SignupPage() {
       const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
       // Check if email already exists
-      const emailExists = existingUsers.some(user => user.email === data.email);
-      
+      const emailExists = existingUsers.some((user) => user.email === data.email);
+
       if (emailExists) {
         alert("Email already registered! Please login.");
         setIsSubmitting(false);
@@ -60,7 +60,7 @@ export default function SignupPage() {
       localStorage.setItem("currentUser", JSON.stringify(newUser));
 
       alert("Account created successfully!");
-      
+
       // Redirect based on user type
       if (userType === "customer") {
         router.push("/dashboard");
@@ -76,16 +76,12 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen  from-green-50 to-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Join RepairFirst
-          </h1>
-          <p className="text-gray-600">
-            Fix, don't replace. Save the planet together.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Sahayog</h1>
+          <p className="text-gray-600">Fix, don't replace. Save the planet together.</p>
         </div>
 
         {/* User Type Toggle */}
@@ -93,22 +89,14 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setUserType("customer")}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
-              userType === "customer"
-                ? "bg-green-600 text-white shadow-md"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${userType === "customer" ? "bg-green-600 text-white shadow-md" : "text-gray-600 hover:text-gray-800"}`}
           >
             Customer
           </button>
           <button
             type="button"
             onClick={() => setUserType("provider")}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
-              userType === "provider"
-                ? "bg-green-600 text-white shadow-md"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${userType === "provider" ? "bg-green-600 text-white shadow-md" : "text-gray-600 hover:text-gray-800"}`}
           >
             Service Provider
           </button>
@@ -118,9 +106,7 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
             <input
               type="text"
               {...register("name", {
@@ -133,16 +119,11 @@ export default function SignupPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
               placeholder="John Doe"
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
           </div>
-
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               {...register("email", {
@@ -155,16 +136,11 @@ export default function SignupPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
               placeholder="john@example.com"
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
           </div>
-
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
             <input
               type="tel"
               {...register("phone", {
@@ -177,57 +153,61 @@ export default function SignupPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
               placeholder="9876543210"
             />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-            )}
+            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
           </div>
-
           {/* Provider-specific fields */}
           {userType === "provider" && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Skills/Services
-                </label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Skills/Services</label>
+                <select
                   {...register("skills", {
-                    required: "Skills are required for service providers",
+                    required: "Please select a skill or choose Other",
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                  placeholder="Plumbing, Electrical, Carpentry"
-                />
-                {errors.skills && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.skills.message}
-                  </p>
-                )}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white"
+                >
+                  <option value="">Select a skill</option>
+                  <option value="Plumbing">Plumbing</option>
+                  <option value="Electrical">Electrical</option>
+                  <option value="Carpentry">Carpentry</option>
+                  <option value="Painting">Painting</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors.skills && <p className="text-red-500 text-sm mt-1">{errors.skills.message}</p>}
               </div>
 
+              {/* If "Other" selected, show a text input so user can type their skill */}
+              {watch("skills") === "Other" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Please specify your skill</label>
+                  <input
+                    type="text"
+                    {...register("otherSkill", {
+                      validate: (value) => watch("skills") !== "Other" || (value && value.trim().length > 0) || "Please enter the skill",
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                    placeholder="e.g. Appliance repair"
+                  />
+                  {errors.otherSkill && <p className="text-red-500 text-sm mt-1">{errors.otherSkill.message}</p>}
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Years of Experience
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
                 <input
                   type="number"
                   {...register("experience", {
                     required: "Experience is required",
-                    min: { value: 0, message: "Experience cannot be negative" },
+                    min: {value: 0, message: "Experience cannot be negative"},
                   })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   placeholder="5"
                 />
-                {errors.experience && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.experience.message}
-                  </p>
-                )}
+                {errors.experience && <p className="text-red-500 text-sm mt-1">{errors.experience.message}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Service Location
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Service Location</label>
                 <input
                   type="text"
                   {...register("location", {
@@ -236,20 +216,13 @@ export default function SignupPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   placeholder="Pokhara, Nepal"
                 />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.location.message}
-                  </p>
-                )}
+                {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>}
               </div>
             </>
           )}
 
-          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
               {...register("password", {
@@ -262,35 +235,22 @@ export default function SignupPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
               placeholder="••••••••"
             />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.password.message}
-              </p>
-            )}
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
-
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
             <input
               type="password"
               {...register("confirmPassword", {
                 required: "Please confirm your password",
-                validate: (value) =>
-                  value === password || "Passwords do not match",
+                validate: (value) => value === password || "Passwords do not match",
               })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
               placeholder="••••••••"
             />
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.confirmPassword.message}
-              </p>
-            )}
+            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
           </div>
-
           {/* Submit Button */}
           <button
             type="submit"
