@@ -6,14 +6,15 @@ import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {authService} from "@/services/authservices";
+import {Checkbox} from "@/components/ui/checkbox";
 
 export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState("customer"); // customer or provider
   const router = useRouter();
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const {
     register,
@@ -24,54 +25,44 @@ export default function SignupPage() {
   } = useForm();
 
   const password = watch("password");
-  const skills = watch("skills");
+  const skills = watch("skills", []);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
     try {
-      // Get existing users from localStorage
-      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-
-      // Check if email already exists
-      const emailExists = existingUsers.some((user) => user.email === data.email);
-
-      if (emailExists) {
-        alert("Email already registered! Please login.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Handle "Other" skill
-      let finalSkills = data.skills;
-      if (userType === "provider" && data.skills === "Other") {
-        finalSkills = data.otherSkill || "Other";
-      }
-
       // Create user object
       const newUser = {
-        id: Date.now().toString(),
         name: data.name,
         email: data.email,
-        phone: data.phone,
-        password: data.password, // In production, NEVER store plain passwords!
-        userType: userType,
+        phone_number: data.phone,
+        password: data.password,
+        role: userType,
         ...(userType === "provider" && {
-          skills: finalSkills,
-          experience: data.experience,
+          skills: skills,
+          year_of_experience: data.experience,
           location: data.location,
         }),
-        createdAt: new Date().toISOString(),
       };
 
-      // Add new user to array
-      existingUsers.push(newUser);
+      // Hit the API with the newUser data
+      const response = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      });
 
-      // Save to localStorage
-      localStorage.setItem("users", JSON.stringify(existingUsers));
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
 
-      // Set current user
-      localStorage.setItem("currentUser", JSON.stringify(newUser));
+      const result = await response.json();
+      const userId = result.id; // Extract the id from API response
+
+      // Save the id to localStorage
+      localStorage.setItem("id", userId);
 
       alert("Account created successfully!");
 
@@ -89,8 +80,10 @@ export default function SignupPage() {
     }
   };
 
+  const skillOptions = ["Plumbing", "Electrical", "Carpentry", "Painting", "Other"];
+
   return (
-    <div className="min-h-screen  from-green-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen from-green-50 to-blue-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-4">
           <CardTitle className="text-3xl font-bold text-gray-800">Sahayog</CardTitle>
@@ -176,40 +169,48 @@ export default function SignupPage() {
               <>
                 {/* Skills */}
                 <div className="space-y-1">
-                  <Label htmlFor="skills">Skills/Services</Label>
+                  <Label>Skills/Services</Label>
                   <Controller
                     name="skills"
                     control={control}
                     rules={{
-                      required: "Please select a skill or choose Other",
+                      validate: (value) => (value && value.length > 0) || "Please select at least one skill",
                     }}
                     render={({field}) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a skill" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Plumbing">Plumbing</SelectItem>
-                          <SelectItem value="Electrical">Electrical</SelectItem>
-                          <SelectItem value="Carpentry">Carpentry</SelectItem>
-                          <SelectItem value="Painting">Painting</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="grid grid-cols-2 gap-2">
+                        {skillOptions.map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={option}
+                              checked={field.value?.includes(option)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...(field.value || []), option]);
+                                } else {
+                                  field.onChange(field.value?.filter((v) => v !== option));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={option} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              {option}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   />
                   {errors.skills && <p className="text-destructive text-sm">{errors.skills.message}</p>}
                 </div>
 
                 {/* If "Other" selected, show text input */}
-                {skills === "Other" && (
+                {skills.includes("Other") && (
                   <div className="space-y-1">
                     <Label htmlFor="otherSkill">Please specify your skill</Label>
                     <Input
                       id="otherSkill"
                       type="text"
                       {...register("otherSkill", {
-                        validate: (value) => skills !== "Other" || (value && value.trim().length > 0) || "Please enter the skill",
+                        validate: (value) => !skills.includes("Other") || (value && value.trim().length > 0) || "Please enter the skill",
                       })}
                       placeholder="e.g. Appliance repair"
                     />
