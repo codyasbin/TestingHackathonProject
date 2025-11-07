@@ -328,7 +328,7 @@ export default function BrowsePage() {
         {filteredProviders.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProviders.map((provider) => (
-              <Link key={provider.id} href={`/providers/${provider.id}`}>
+              <Link key={provider.id} href={`/provider/${provider.id}`}>
                 <Card className="h-full border border-border hover:shadow-lg hover:border-primary transition-all cursor-pointer overflow-hidden">
                   <div className="aspect-video overflow-hidden bg-muted">
                     <img
