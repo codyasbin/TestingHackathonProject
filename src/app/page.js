@@ -228,6 +228,26 @@ export default function Home() {
                   Settings
                 </DropdownMenuItem>
 
+                <DropdownMenuItem
+                  onClick={() => router.push("/rewards")}
+                  className="cursor-pointer"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m-3-3H9m3-4H9m3 0h3m-3 0v4m0 0l-3 3m3-3h3m-3 0h-3"
+                    />
+                  </svg>
+                  Rewards and Points
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
