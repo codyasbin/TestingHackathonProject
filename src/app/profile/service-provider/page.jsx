@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function ServiceProviderProfile() {
   const [isEditing, setIsEditing] = useState(false)
+  const router = useRouter()
   const [profile, setProfile] = useState({
     // Personal Info
     name: "John Plumbing Solutions",
@@ -169,6 +171,10 @@ export default function ServiceProviderProfile() {
                     <CheckCircle className="w-4 h-4 text-white" />
                   </div>
                 )}
+                {/* verify your profile */}
+               
+                  
+                
               </div>
               <div className="flex-1">
                 {isEditing ? (
@@ -186,6 +192,12 @@ export default function ServiceProviderProfile() {
                         Verified
                       </span>
                     )}
+                    <Button
+                    onClick={() => (router.push("/verify-profile"))}
+                    className=" bg-blue-500 text-white rounded-full px-2 py-1 text-xs"
+                  >
+                    Verify Your Profile
+                  </Button>
                   </div>
                 )}
                 {isEditing ? (
