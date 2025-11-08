@@ -3,7 +3,6 @@
 import {useForm} from "react-hook-form";
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {authService} from "@/services/authservices";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -21,12 +20,13 @@ export default function LoginPage() {
     handleSubmit,
     formState: {errors},
   } = useForm();
+  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${API_URL}login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,21 +42,19 @@ export default function LoginPage() {
         return;
       }
 
-      const user = result.user; // <-- the user object from the API
-
+      const user = result.user;
       // Store the full user object
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      sessionStorage.setItem("currentUser", JSON.stringify(user));
 
-      // *** Add the ID to localStorage ***
-      localStorage.setItem("userId", user.id);
+      sessionStorage.setItem("userId", user.id);
+      sessionStorage.setItem("role", user.role);
 
       alert(`Welcome back, ${user.name}!`);
 
-      // Redirect based on role (the field in the response is "role")
-      if (user.role === "customer") {
+      if (user.role === "consumer") {
         router.push("/dashboard");
       } else {
-        router.push("/provider-dashboard");
+        router.push("/profile/service-provider");
       }
     } catch (error) {
       console.error("Login error:", error);
