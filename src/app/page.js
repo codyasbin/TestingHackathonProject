@@ -10,6 +10,7 @@ import {Avatar} from "@/components/ui/avatar";
 import {AvatarFallback} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
 import Header from "./components/header";
+import FeaturedProviders from "./components/Featured-Providers";
 
 export default function Home() {
   const router = useRouter();
@@ -174,58 +175,7 @@ export default function Home() {
       </section>
 
       {/* Featured Providers */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-secondary/10">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Featured Providers</h2>
-            <p className="text-lg text-muted-foreground">Trusted professionals making a difference</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Green Thumb Landscaping",
-                rating: 4.9,
-                reviews: 128,
-                specialty: "Eco Gardening",
-              },
-              {
-                name: "Sunny Solutions",
-                rating: 4.8,
-                reviews: 95,
-                specialty: "Solar Energy",
-              },
-              {
-                name: "Waste Wise Co.",
-                rating: 4.7,
-                reviews: 112,
-                specialty: "Waste Management",
-              },
-            ].map((provider, index) => (
-              <Card key={index} className="p-6 border border-border hover:shadow-lg transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20"></div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{provider.name}</h3>
-                    <p className="text-xs text-muted-foreground">{provider.specialty}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(provider.rating) ? "fill-primary text-primary" : "text-muted"}`} />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{provider.rating}</span>
-                  <span className="text-xs text-muted-foreground">({provider.reviews})</span>
-                </div>
-                <Button className="w-full bg-transparent" variant="outline">
-                  View Profile
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FeaturedProviders />
 
       {/* CTA Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
