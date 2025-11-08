@@ -6,6 +6,9 @@ import Header from "@/app/components/header"
 import Footer from "@/app/components/footer"
 import BookingModal from "@/app/components/booking-modal"
 import { useParams } from "next/navigation"
+import { useSocket } from "@/app/providers/socketProvider"
+import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation"
 
 const allProviders = [
   {
@@ -51,10 +54,41 @@ const allProviders = [
 ]
 
 export default function ProviderDetail() {
-    const params = useParams()
+  const params = useParams()
   const provider = allProviders.find((p) => p.id === Number.parseInt(params.id))
   const [showBooking, setShowBooking] = useState(false)
   const [bookingData, setBookingData] = useState(null)
+  const { sendInvitation } = useSocket();
+  const router = useRouter();
+
+
+  const baseurl= "localhost:3001"
+  const handleClick = () => {
+   async function sendCall() {
+      const response = await fetch(`http://${baseurl}/api/incoming-call`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          incomingCall:true
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      return data;
+    }
+    sendCall().then((data) => {
+      console.log("Call initiated:", data);
+    }).catch((error) => {
+      console.error("Error initiating call:", error);
+    });
+    router.push(`/online-room`);
+  };
+
+
 
   if (!provider) {
     return (
@@ -170,8 +204,8 @@ export default function ProviderDetail() {
                   Request Booking
                 </button>
 
-                <button className="w-full border-2 border-primary-foreground py-2 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 transition">
-                  Message Provider
+                <button onClick={handleClick} className="w-full border-2 border-primary-foreground py-2 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 transition">
+                  Online Meet Now
                 </button>
 
                 <div className="mt-6 pt-6 border-t border-primary-foreground/20 text-xs opacity-80">
