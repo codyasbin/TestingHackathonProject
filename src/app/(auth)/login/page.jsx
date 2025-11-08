@@ -42,17 +42,14 @@ export default function LoginPage() {
         return;
       }
 
-      const user = result.user; // <-- the user object from the API
-
+      const user = result.user;
       // Store the full user object
       localStorage.setItem("currentUser", JSON.stringify(user));
 
-      // *** Add the ID to localStorage ***
       localStorage.setItem("userId", user.id);
 
       alert(`Welcome back, ${user.name}!`);
 
-      // Redirect based on role (the field in the response is "role")
       if (user.role === "customer") {
         router.push("/dashboard");
       } else {
