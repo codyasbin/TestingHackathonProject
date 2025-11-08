@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import {useState, useEffect} from "react";
+import {Button} from "@/components/ui/button";
+import {Card} from "@/components/ui/card";
+import {Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star} from "lucide-react";
+import Link from "next/link";
+import {useRouter} from "next/navigation";
 
 export default function ServiceProviderProfile() {
-  const [isEditing, setIsEditing] = useState(false)
-  const router = useRouter()
+  const [isEditing, setIsEditing] = useState(false);
+  const router = useRouter();
   const [profile, setProfile] = useState({
     // Personal Info
     name: "John Plumbing Solutions",
@@ -17,7 +17,7 @@ export default function ServiceProviderProfile() {
     phone: "+1 (555) 234-5678",
     location: "San Francisco, CA",
     bio: "Expert plumber with 10 years experience",
-    
+
     // Service Details
     category: "plumbing",
     services: ["Pipe Repairs", "Leak Detection", "Installation", "Emergency Services"],
@@ -27,7 +27,7 @@ export default function ServiceProviderProfile() {
     sustainability: "Uses eco-friendly materials and water-saving fixtures",
     languages: ["English", "Spanish"],
     responseTime: "30 mins",
-    
+
     // Stats
     rating: 4.8,
     reviews: 234,
@@ -35,82 +35,82 @@ export default function ServiceProviderProfile() {
     carbonSaved: 5.2,
     memberSince: "2020",
     verified: true,
-  })
+  });
 
-  const [newService, setNewService] = useState("")
-  const [newLanguage, setNewLanguage] = useState("")
+  const [newService, setNewService] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");
 
   useEffect(() => {
     // Load from localStorage on mount
-    const currentUser = localStorage.getItem("currentUser")
+    const currentUser = localStorage.getItem("currentUser");
     if (currentUser) {
-      const user = JSON.parse(currentUser)
+      const user = JSON.parse(currentUser);
       if (user.userType === "provider") {
-        setProfile(prev => ({
+        setProfile((prev) => ({
           ...prev,
           name: user.name || prev.name,
           email: user.email || prev.email,
           phone: user.phone || prev.phone,
           location: user.location || prev.location,
-        }))
+        }));
       }
     }
-  }, [])
+  }, []);
 
   const handleSave = () => {
     // Save to localStorage
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
-    const updatedUser = { ...currentUser, ...profile }
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser))
-    
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const updatedUser = {...currentUser, ...profile};
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
     // Update in users array
-    const users = JSON.parse(localStorage.getItem("users") || "[]")
-    const userIndex = users.findIndex(u => u.email === profile.email)
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const userIndex = users.findIndex((u) => u.email === profile.email);
     if (userIndex !== -1) {
-      users[userIndex] = updatedUser
-      localStorage.setItem("users", JSON.stringify(users))
+      users[userIndex] = updatedUser;
+      localStorage.setItem("users", JSON.stringify(users));
     }
-    
-    setIsEditing(false)
-    alert("Profile updated successfully!")
-  }
+
+    setIsEditing(false);
+    alert("Profile updated successfully!");
+  };
 
   const addService = () => {
     if (newService.trim()) {
       setProfile({
         ...profile,
-        services: [...profile.services, newService.trim()]
-      })
-      setNewService("")
+        services: [...profile.services, newService.trim()],
+      });
+      setNewService("");
     }
-  }
+  };
 
   const removeService = (index) => {
     setProfile({
       ...profile,
-      services: profile.services.filter((_, i) => i !== index)
-    })
-  }
+      services: profile.services.filter((_, i) => i !== index),
+    });
+  };
 
   const addLanguage = () => {
     if (newLanguage.trim() && !profile.languages.includes(newLanguage.trim())) {
       setProfile({
         ...profile,
-        languages: [...profile.languages, newLanguage.trim()]
-      })
-      setNewLanguage("")
+        languages: [...profile.languages, newLanguage.trim()],
+      });
+      setNewLanguage("");
     }
-  }
+  };
 
   const removeLanguage = (index) => {
     setProfile({
       ...profile,
-      languages: profile.languages.filter((_, i) => i !== index)
-    })
-  }
+      languages: profile.languages.filter((_, i) => i !== index),
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -122,10 +122,14 @@ export default function ServiceProviderProfile() {
             <Link href="/provider-dashboard" className="text-sm hover:text-green-600 transition">
               Dashboard
             </Link>
-            <Button variant="outline" size="sm" onClick={() => {
-              localStorage.removeItem("currentUser")
-              window.location.href = "/login"
-            }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem("currentUser");
+                window.location.href = "/login";
+              }}
+            >
               Sign out
             </Button>
           </div>
@@ -162,48 +166,36 @@ export default function ServiceProviderProfile() {
           {/* Main Profile Card */}
           <Card className="lg:col-span-2 p-8 bg-white shadow-lg">
             <div className="flex items-start gap-6 mb-8 pb-8 border-b">
-              <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 relative">
-                <span className="text-3xl font-bold text-green-600">
-                  {profile.name.substring(0, 2).toUpperCase()}
-                </span>
+              <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center shrink-0 relative">
+                <span className="text-3xl font-bold text-green-600">{profile.name.substring(0, 2).toUpperCase()}</span>
                 {profile.verified && (
                   <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
                     <CheckCircle className="w-4 h-4 text-white" />
                   </div>
                 )}
                 {/* verify your profile */}
-               
-                  
-                
               </div>
               <div className="flex-1">
                 {isEditing ? (
                   <input
                     type="text"
                     value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    onChange={(e) => setProfile({...profile, name: e.target.value})}
                     className="text-2xl font-bold w-full mb-2 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                   />
                 ) : (
                   <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-                    {profile.verified && (
-                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
-                        Verified
-                      </span>
-                    )}
-                    <Button
-                    onClick={() => (router.push("/verify-profile"))}
-                    className=" bg-blue-500 text-white rounded-full px-2 py-1 text-xs"
-                  >
-                    Verify Your Profile
-                  </Button>
+                    {profile.verified && <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">Verified</span>}
+                    <Button onClick={() => router.push("/verify-profile")} className=" bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                      Verify Your Profile
+                    </Button>
                   </div>
                 )}
                 {isEditing ? (
                   <textarea
                     value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                    onChange={(e) => setProfile({...profile, bio: e.target.value})}
                     className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-gray-600 text-sm"
                     rows="2"
                   />
@@ -213,14 +205,7 @@ export default function ServiceProviderProfile() {
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(profile.rating)
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
+                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(profile.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
                     ))}
                   </div>
                   <span className="text-sm font-semibold text-gray-700">{profile.rating}</span>
@@ -238,7 +223,7 @@ export default function ServiceProviderProfile() {
                   <input
                     type="email"
                     value={profile.email}
-                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                    onChange={(e) => setProfile({...profile, email: e.target.value})}
                     className="flex-1 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                   />
                 ) : (
@@ -251,7 +236,7 @@ export default function ServiceProviderProfile() {
                   <input
                     type="tel"
                     value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    onChange={(e) => setProfile({...profile, phone: e.target.value})}
                     className="flex-1 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                   />
                 ) : (
@@ -264,7 +249,7 @@ export default function ServiceProviderProfile() {
                   <input
                     type="text"
                     value={profile.location}
-                    onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                    onChange={(e) => setProfile({...profile, location: e.target.value})}
                     className="flex-1 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                   />
                 ) : (
@@ -276,14 +261,14 @@ export default function ServiceProviderProfile() {
             {/* Service Details */}
             <div className="space-y-6">
               <h3 className="font-semibold text-gray-800">Service Details</h3>
-              
+
               {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 {isEditing ? (
                   <select
                     value={profile.category}
-                    onChange={(e) => setProfile({ ...profile, category: e.target.value })}
+                    onChange={(e) => setProfile({...profile, category: e.target.value})}
                     className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                   >
                     <option value="plumbing">Plumbing</option>
@@ -294,9 +279,7 @@ export default function ServiceProviderProfile() {
                     <option value="other">Other</option>
                   </select>
                 ) : (
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium capitalize">
-                    {profile.category}
-                  </span>
+                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium capitalize">{profile.category}</span>
                 )}
               </div>
 
@@ -305,16 +288,10 @@ export default function ServiceProviderProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Services Offered</label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {profile.services.map((service, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                    >
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                       {service}
                       {isEditing && (
-                        <button
-                          onClick={() => removeService(index)}
-                          className="ml-1 hover:text-red-600"
-                        >
+                        <button onClick={() => removeService(index)} className="ml-1 hover:text-red-600">
                           ×
                         </button>
                       )}
@@ -329,7 +306,7 @@ export default function ServiceProviderProfile() {
                       onChange={(e) => setNewService(e.target.value)}
                       placeholder="Add new service"
                       className="flex-1 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-sm"
-                      onKeyPress={(e) => e.key === 'Enter' && addService()}
+                      onKeyPress={(e) => e.key === "Enter" && addService()}
                     />
                     <Button onClick={addService} size="sm" className="bg-green-600 hover:bg-green-700">
                       Add
@@ -348,7 +325,7 @@ export default function ServiceProviderProfile() {
                       <input
                         type="number"
                         value={profile.price}
-                        onChange={(e) => setProfile({ ...profile, price: parseFloat(e.target.value) })}
+                        onChange={(e) => setProfile({...profile, price: parseFloat(e.target.value)})}
                         className="w-full pl-9 pr-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                       />
                     </div>
@@ -363,17 +340,13 @@ export default function ServiceProviderProfile() {
                       <input
                         type="checkbox"
                         checked={profile.negotiable}
-                        onChange={(e) => setProfile({ ...profile, negotiable: e.target.checked })}
+                        onChange={(e) => setProfile({...profile, negotiable: e.target.checked})}
                         className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
                       />
                       <span className="text-sm text-gray-700">Price is negotiable</span>
                     </label>
                   ) : (
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      profile.negotiable
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${profile.negotiable ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                       {profile.negotiable ? "Negotiable" : "Fixed Price"}
                     </span>
                   )}
@@ -386,7 +359,7 @@ export default function ServiceProviderProfile() {
                 {isEditing ? (
                   <textarea
                     value={profile.description}
-                    onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                    onChange={(e) => setProfile({...profile, description: e.target.value})}
                     className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                     rows="4"
                   />
@@ -401,13 +374,13 @@ export default function ServiceProviderProfile() {
                 {isEditing ? (
                   <textarea
                     value={profile.sustainability}
-                    onChange={(e) => setProfile({ ...profile, sustainability: e.target.value })}
+                    onChange={(e) => setProfile({...profile, sustainability: e.target.value})}
                     className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                     rows="2"
                   />
                 ) : (
                   <p className="text-gray-600 text-sm flex items-start gap-2">
-                    <Leaf className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <Leaf className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
                     {profile.sustainability}
                   </p>
                 )}
@@ -418,16 +391,10 @@ export default function ServiceProviderProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Languages</label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {profile.languages.map((lang, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
-                    >
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
                       {lang}
                       {isEditing && (
-                        <button
-                          onClick={() => removeLanguage(index)}
-                          className="ml-1 hover:text-red-600"
-                        >
+                        <button onClick={() => removeLanguage(index)} className="ml-1 hover:text-red-600">
                           ×
                         </button>
                       )}
@@ -442,7 +409,7 @@ export default function ServiceProviderProfile() {
                       onChange={(e) => setNewLanguage(e.target.value)}
                       placeholder="Add language"
                       className="flex-1 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-sm"
-                      onKeyPress={(e) => e.key === 'Enter' && addLanguage()}
+                      onKeyPress={(e) => e.key === "Enter" && addLanguage()}
                     />
                     <Button onClick={addLanguage} size="sm" className="bg-green-600 hover:bg-green-700">
                       Add
@@ -458,7 +425,7 @@ export default function ServiceProviderProfile() {
                   <input
                     type="text"
                     value={profile.responseTime}
-                    onChange={(e) => setProfile({ ...profile, responseTime: e.target.value })}
+                    onChange={(e) => setProfile({...profile, responseTime: e.target.value})}
                     className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
                     placeholder="e.g., 30 mins"
                   />
@@ -525,5 +492,5 @@ export default function ServiceProviderProfile() {
         </div>
       </div>
     </div>
-  )
+  );
 }

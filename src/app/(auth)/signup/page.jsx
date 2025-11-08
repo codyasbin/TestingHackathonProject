@@ -11,10 +11,10 @@ import {Checkbox} from "@/components/ui/checkbox";
 
 export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userType, setUserType] = useState("customer"); // customer or provider
+  const [userType, setUserType] = useState("consumer"); // customer or provider
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const {
     register,
@@ -46,7 +46,7 @@ export default function SignupPage() {
       };
 
       // Hit the API with the newUser data
-      const response = await fetch(`${API_URL}/signup`, {
+      const response = await fetch(`${API_URL}signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,18 +59,19 @@ export default function SignupPage() {
       }
 
       const result = await response.json();
-      const userId = result.id; // Extract the id from API response
+      const userId = result.id;
 
       // Save the id to localStorage
-      localStorage.setItem("id", userId);
+      sessionStorage.setItem("id", userId);
+      sessionStorage.setItem("role", result.role);
 
       alert("Account created successfully!");
 
       // Redirect based on user type
-      if (userType === "customer") {
+      if (userType === "consumer") {
         router.push("/dashboard");
       } else {
-        router.push("/provider-dashboard");
+        router.push("/profile/service-provider");
       }
     } catch (error) {
       console.error("Signup error:", error);
