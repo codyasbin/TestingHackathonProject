@@ -1,11 +1,11 @@
 "use client";
 
-import {useState, useEffect} from "react";
-import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
-import {Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star} from "lucide-react";
-import Link from "next/link";
-import {useRouter} from "next/navigation";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star, Sparkles, Loader2, X } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function ServiceProviderProfile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -37,8 +37,14 @@ export default function ServiceProviderProfile() {
     verified: true,
   });
 
-  const [newService, setNewService] = useState("");
-  const [newLanguage, setNewLanguage] = useState("");
+  const [newService, setNewService] = useState("")
+  const [newLanguage, setNewLanguage] = useState("")
+  
+  // AI Enhancement States
+  const [aiModal, setAiModal] = useState({ open: false, field: null })
+  const [aiPrompt, setAiPrompt] = useState("")
+  const [isEnhancing, setIsEnhancing] = useState(false)
+  const [enhancedText, setEnhancedText] = useState("")
 
   useEffect(() => {
     // Load from localStorage on mount
@@ -105,9 +111,85 @@ export default function ServiceProviderProfile() {
   const removeLanguage = (index) => {
     setProfile({
       ...profile,
-      languages: profile.languages.filter((_, i) => i !== index),
-    });
-  };
+      languages: profile.languages.filter((_, i) => i !== index)
+    })
+  }
+
+  // AI Enhancement Functions
+  const openAiModal = (field) => {
+    setAiModal({ open: true, field })
+    setAiPrompt("")
+    setEnhancedText("")
+  }
+
+  const closeAiModal = () => {
+    setAiModal({ open: false, field: null })
+    setAiPrompt("")
+    setEnhancedText("")
+  }
+
+  const enhanceWithAI = async (useCustomPrompt = false) => {
+    setIsEnhancing(true)
+    setEnhancedText("")
+    
+    try {
+      const currentText = profile[aiModal.field]
+      const fieldName = aiModal.field === 'bio' ? 'professional bio' : 
+                       aiModal.field === 'description' ? 'service description' :
+                       aiModal.field === 'sustainability' ? 'sustainability practices description' : aiModal.field
+      
+      let userMessage = ""
+      if (useCustomPrompt && aiPrompt.trim()) {
+        userMessage = `Enhance the following ${fieldName} according to these instructions: "${aiPrompt}"\n\nCurrent text: "${currentText}"\n\nProvide only the enhanced text without any explanations or preamble.`
+      } else {
+        userMessage = `Enhance the following ${fieldName} to make it more professional, engaging, and compelling while maintaining authenticity. Keep it concise but impactful.\n\nCurrent text: "${currentText}"\n\nProvide only the enhanced text without any explanations or preamble.`
+      }
+
+      const response = await fetch('/api/gpt/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert copywriter specializing in service provider profiles. Your task is to enhance text to be professional, compelling, and authentic."
+            },
+            {
+              role: "user",
+              content: userMessage
+            }
+          ]
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to enhance text')
+      }
+
+      const data = await response.json()
+      
+      // Extract content from OpenAI-style response structure
+      const enhanced = data.choices?.[0]?.message?.content || "Enhancement failed"
+      setEnhancedText(enhanced.trim())
+    } catch (error) {
+      console.error('AI Enhancement Error:', error)
+      alert('Failed to enhance text. Please try again.')
+    } finally {
+      setIsEnhancing(false)
+    }
+  }
+
+  const applyEnhancement = () => {
+    if (enhancedText) {
+      setProfile({
+        ...profile,
+        [aiModal.field]: enhancedText
+      })
+      closeAiModal()
+    }
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
@@ -173,7 +255,6 @@ export default function ServiceProviderProfile() {
                     <CheckCircle className="w-4 h-4 text-white" />
                   </div>
                 )}
-                {/* verify your profile */}
               </div>
               <div className="flex-1">
                 {isEditing ? (
@@ -186,22 +267,45 @@ export default function ServiceProviderProfile() {
                 ) : (
                   <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-                    {profile.verified && <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">Verified</span>}
-                    <Button onClick={() => router.push("/verify-profile")} className=" bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                    {profile.verified && (
+                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
+                        Verified
+                      </span>
+                    )}
+                    <Button
+                      onClick={() => router.push("/verify-profile")}
+                      className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs"
+                    >
                       Verify Your Profile
                     </Button>
                   </div>
                 )}
-                {isEditing ? (
-                  <textarea
-                    value={profile.bio}
-                    onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                    className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-gray-600 text-sm"
-                    rows="2"
-                  />
-                ) : (
-                  <p className="text-gray-600 text-sm">{profile.bio}</p>
-                )}
+                
+                {/* Bio with AI Enhancement */}
+                <div className="relative">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={profile.bio}
+                        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                        className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-gray-600 text-sm"
+                        rows="2"
+                      />
+                      <Button
+                        onClick={() => openAiModal('bio')}
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        Enhance with AI
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm">{profile.bio}</p>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
@@ -353,31 +457,53 @@ export default function ServiceProviderProfile() {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description with AI Enhancement */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Service Description</label>
                 {isEditing ? (
-                  <textarea
-                    value={profile.description}
-                    onChange={(e) => setProfile({...profile, description: e.target.value})}
-                    className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
-                    rows="4"
-                  />
+                  <div className="space-y-2">
+                    <textarea
+                      value={profile.description}
+                      onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                      className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
+                      rows="4"
+                    />
+                    <Button
+                      onClick={() => openAiModal('description')}
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Enhance with AI
+                    </Button>
+                  </div>
                 ) : (
                   <p className="text-gray-600 text-sm">{profile.description}</p>
                 )}
               </div>
 
-              {/* Sustainability */}
+              {/* Sustainability with AI Enhancement */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Sustainability Practices</label>
                 {isEditing ? (
-                  <textarea
-                    value={profile.sustainability}
-                    onChange={(e) => setProfile({...profile, sustainability: e.target.value})}
-                    className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
-                    rows="2"
-                  />
+                  <div className="space-y-2">
+                    <textarea
+                      value={profile.sustainability}
+                      onChange={(e) => setProfile({ ...profile, sustainability: e.target.value })}
+                      className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
+                      rows="2"
+                    />
+                    <Button
+                      onClick={() => openAiModal('sustainability')}
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Enhance with AI
+                    </Button>
+                  </div>
                 ) : (
                   <p className="text-gray-600 text-sm flex items-start gap-2">
                     <Leaf className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
@@ -491,6 +617,122 @@ export default function ServiceProviderProfile() {
           </Button>
         </div>
       </div>
+
+      {/* AI Enhancement Modal */}
+      {aiModal.open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="max-w-2xl w-full bg-white shadow-2xl">
+            <div className="p-6 border-b flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">AI Enhancement</h2>
+                  <p className="text-sm text-gray-600">Improve your {aiModal.field} with AI</p>
+                </div>
+              </div>
+              <button
+                onClick={closeAiModal}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Original Text */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Text</label>
+                <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700 border border-gray-200">
+                  {profile[aiModal.field]}
+                </div>
+              </div>
+
+              {/* Custom Prompt */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Custom Instructions (Optional)
+                </label>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="e.g., Make it more professional, add emphasis on experience, highlight certifications..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-sm"
+                  rows="3"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => enhanceWithAI(false)}
+                  disabled={isEnhancing}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 gap-2"
+                >
+                  {isEnhancing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Enhancing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Auto Enhance
+                    </>
+                  )}
+                </Button>
+                {aiPrompt.trim() && (
+                  <Button
+                    onClick={() => enhanceWithAI(true)}
+                    disabled={isEnhancing}
+                    variant="outline"
+                    className="flex-1 gap-2"
+                  >
+                    {isEnhancing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Enhance with Prompt
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {/* Enhanced Result */}
+              {enhancedText && (
+                <div className="space-y-3 pt-4 border-t">
+                  <label className="block text-sm font-medium text-gray-700">Enhanced Text</label>
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg text-sm text-gray-800 border border-purple-200">
+                    {enhancedText}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={applyEnhancement}
+                      className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Apply Enhancement
+                    </Button>
+                    <Button
+                      onClick={() => setEnhancedText("")}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
