@@ -10,6 +10,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {Checkbox} from "@/components/ui/checkbox";
 import {Separator} from "@/components/ui/separator";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,58 +21,52 @@ export default function LoginPage() {
     handleSubmit,
     formState: {errors},
   } = useForm();
-  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({email: data.email, password: data.password}),
-      });
+      // Get all users from localStorage
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-      // Parse the JSON response
-      const result = await response.json();
+      // Find user with matching email and password
+      const user = users.find(
+        (u) => u.email === data.email && u.password === data.password
+      );
 
-      if (!response.ok || result.message !== "Login successful") {
-        alert("Invalid email or password!");
+      if (!user) {
+        // alert("Invalid email or password!");
+        toast.error("Invalid email or password!");
+        setIsSubmitting(false);
         return;
       }
 
-      const user = result.user;
-      // Store the full user object
-      sessionStorage.setItem("currentUser", JSON.stringify(user));
+      // Store the full user object in localStorage
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      localStorage.setItem("id", user.id);
+      localStorage.setItem("role", user.role);
 
-      sessionStorage.setItem("userId", user.id);
-      sessionStorage.setItem("role", user.role);
+      // alert(`Welcome back, ${user.name}!`);
 
-      alert(`Welcome back, ${user.name}!`);
-
-      if (user.role === "consumer") {
-        router.push("/dashboard");
-      } else {
-        router.push("/profile/service-provider");
-      }
+      // Redirect based on user role
+      router.push("/")
     } catch (error) {
       console.error("Login error:", error);
-      alert("Invalid email or password!");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
-    <div className="min-h-screen  from-green-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen from-green-50 to-blue-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-4">
           <div className="mb-4">
             <span className="text-5xl">🔧</span>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-800">Welcome Back</CardTitle>
-          <CardDescription className="text-gray-600">Login to RepairFirst and continue saving the planet</CardDescription>
+          <CardDescription className="text-gray-600">Login to Sahayog and continue saving the planet</CardDescription>
         </CardHeader>
         <CardContent className="px-6 pb-6">
           {/* Form */}
@@ -89,7 +84,7 @@ export default function LoginPage() {
                     message: "Invalid email address",
                   },
                 })}
-                placeholder="john@example.com"
+                placeholder="ram@example.com"
               />
               {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
             </div>

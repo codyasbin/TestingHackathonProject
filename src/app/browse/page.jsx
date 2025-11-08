@@ -4,16 +4,192 @@ import {useState, useEffect, useRef} from "react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import Link from "next/link";
-import {Star, MapPin, Filter, Search, Leaf, Locate, X, ChevronDown, Mic, MicOff, Loader2, Sparkles} from "lucide-react";
+import {Star, MapPin, Filter, Search, Leaf, Locate, X, ChevronDown, Mic, MicOff, Loader2, Sparkles, Navigation, CheckCircle} from "lucide-react";
 import {ServiceProviders} from "@/data/ServiceProvider";
+// Expanded service providers with realistic coordinates around Kathmandu
+// const ServiceProviders = [
+//   {
+//     id: 1,
+//     name: "Ramesh Electrical Services",
+//     service: "Solar Fitting",
+//     verification: true,
+//     rating: 4.5,
+//     email: "john@gmail.com",
+//     phone: "+977-12345678",
+//     location: "0.8km",
+//     city: "Kathmandu",
+//     coordinates: {lat: 27.7172, lng: 85.3240}, // Thamel
+//     image: "https://images.unsplash.com/photo-1659353588580-8da374e328a1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+//     about: "I provide comprehensive electrical solutions for residential and commercial properties. Specializing in solar installations and repairs.",
+//     sustainability: "Uses eco-friendly materials and energy-efficient fixtures",
+//     keywords: ["electrical", "solar", "repairs", "installations", "conservation"],
+//     languages: "Nepali, Hindi, English",
+//     rate: "Nrs 1000 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Adil Poudel", rating: 4.5, comment: "Great experience with Ramesh's electrical service! Highly recommended."},
+//       {id: 2, reviewer: "Anugya Acharya", rating: 4.0, comment: "Good work but could have been better."}
+//     ]
+//   },
+//   {
+//     id: 2,
+//     name: "Kopila Tailor",
+//     service: "Tailoring",
+//     verification: true,
+//     rating: 3.0,
+//     email: "Kopila@gmail.com",
+//     phone: "+977-12345678",
+//     location: "0.9km",
+//     city: "Kathmandu",
+//     coordinates: {lat: 27.7089, lng: 85.3206}, // Durbarmarg
+//     image: "https://images.unsplash.com/photo-1732850195250-940dd4d0bb49?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+//     about: "I provide comprehensive tailoring service for all kinds of outfits. Specializing in female outfit repair, alterations, and custom designs.",
+//     sustainability: "Offers sustainable packaging options and reduces waste.",
+//     keywords: ["tailoring", "repairs", "alterations", "custom design", "clothes"],
+//     languages: "Nepali, Hindi",
+//     rate: "Nrs 100- Nrs 500",
+//     reviews: [
+//       {id: 1, reviewer: "Nabin Rai", rating: 4.5, comment: "Wonderful tailoring service by Kopila. Highly recommended."},
+//       {id: 2, reviewer: "Shyam Sharma", rating: 4.0, comment: "Good work perfect fit."}
+//     ]
+//   },
+//   {
+//     id: 3,
+//     name: "Sita Bridal",
+//     service: "Bridal Makeup",
+//     verification: true,
+//     rating: 4.0,
+//     email: "sita@gmail.com",
+//     phone: "+977-12345678",
+//     location: "7.8km",
+//     city: "Lalitpur",
+//     coordinates: {lat: 27.6710, lng: 85.3298}, // Patan
+//     image: "https://images.unsplash.com/photo-1684868265714-fd2300637c23?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+//     about: "I provide bridal makeup services to enhance the beauty of brides on their special day.",
+//     sustainability: "Offers sustainable packaging options and reduces waste.",
+//     keywords: ["bridal makeup", "beauty enhancement", "special occasion", "eco-friendly"],
+//     languages: "Nepali, Hindi, English",
+//     rate: "Nrs 1000 - Nrs 2000 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Nabina Prashai", rating: 4.5, comment: "Great experience and wonderful work! Highly recommended."},
+//       {id: 2, reviewer: "Jina Shrestha", rating: 4.0, comment: "Good work but could have been better."}
+//     ]
+//   },
+//   {
+//     id: 4,
+//     name: "Bhaktapur Carpentry Works",
+//     service: "Carpentry",
+//     verification: true,
+//     rating: 4.7,
+//     email: "bhaktapur@gmail.com",
+//     phone: "+977-12345679",
+//     location: "12.5km",
+//     city: "Bhaktapur",
+//     coordinates: {lat: 27.6710, lng: 85.4298}, // Bhaktapur
+//     image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=500",
+//     about: "Traditional and modern carpentry services with 15 years of experience.",
+//     sustainability: "Uses reclaimed wood and eco-friendly finishes",
+//     keywords: ["carpentry", "furniture", "wood", "repair", "custom"],
+//     languages: "Nepali, Newari",
+//     rate: "Nrs 800 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Prakash Joshi", rating: 5.0, comment: "Excellent craftsmanship!"},
+//       {id: 2, reviewer: "Ravi Kumar", rating: 4.5, comment: "Very professional service."}
+//     ]
+//   },
+//   {
+//     id: 5,
+//     name: "Green Plumbing Solutions",
+//     service: "Plumbing",
+//     verification: true,
+//     rating: 4.2,
+//     email: "greenplumb@gmail.com",
+//     phone: "+977-12345680",
+//     location: "2.3km",
+//     city: "Kathmandu",
+//     coordinates: {lat: 27.7000, lng: 85.3000}, // Baluwatar
+//     image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=500",
+//     about: "Expert plumbing services with focus on water conservation and sustainable practices.",
+//     sustainability: "Specializes in water-saving fixtures and leak detection",
+//     keywords: ["plumbing", "water", "pipes", "leak", "fixtures", "conservation"],
+//     languages: "Nepali, English",
+//     rate: "Nrs 900 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Suman Thapa", rating: 4.0, comment: "Prompt and efficient service."}
+//     ]
+//   },
+//   {
+//     id: 6,
+//     name: "Nepal Solar Energy",
+//     service: "Solar Installation",
+//     verification: true,
+//     rating: 4.8,
+//     email: "nepalsolar@gmail.com",
+//     phone: "+977-12345681",
+//     location: "5.2km",
+//     city: "Kathmandu",
+//     coordinates: {lat: 27.7300, lng: 85.3150}, // Bouddha area
+//     image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=500",
+//     about: "Leading solar installation company with certified technicians and quality products.",
+//     sustainability: "Promotes renewable energy and carbon footprint reduction",
+//     keywords: ["solar", "renewable", "energy", "panels", "installation", "green"],
+//     languages: "Nepali, Hindi, English",
+//     rate: "Nrs 1500 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Deepak Sharma", rating: 5.0, comment: "Outstanding service and expertise!"},
+//       {id: 2, reviewer: "Maya Gurung", rating: 4.5, comment: "Very satisfied with the installation."}
+//     ]
+//   },
+//   {
+//     id: 7,
+//     name: "Modern Beauty Studio",
+//     service: "Makeup & Hair",
+//     verification: false,
+//     rating: 3.8,
+//     email: "modernbeauty@gmail.com",
+//     phone: "+977-12345682",
+//     location: "1.5km",
+//     city: "Kathmandu",
+//     coordinates: {lat: 27.7150, lng: 85.3100}, // New Road
+//     image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500",
+//     about: "Contemporary beauty services for all occasions including bridal, party, and casual looks.",
+//     sustainability: "Uses cruelty-free and organic beauty products",
+//     keywords: ["makeup", "beauty", "hair", "bridal", "styling"],
+//     languages: "Nepali, English",
+//     rate: "Nrs 500 - Nrs 1500",
+//     reviews: [
+//       {id: 1, reviewer: "Anjana Rai", rating: 4.0, comment: "Good service and friendly staff."}
+//     ]
+//   },
+//   {
+//     id: 8,
+//     name: "Expert Appliance Repair",
+//     service: "Appliance Repair",
+//     verification: true,
+//     rating: 4.4,
+//     email: "expertrepair@gmail.com",
+//     phone: "+977-12345683",
+//     location: "3.8km",
+//     city: "Lalitpur",
+//     coordinates: {lat: 27.6850, lng: 85.3200}, // Jawalakhel
+//     image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500",
+//     about: "Professional repair services for all home appliances with warranty on repairs.",
+//     sustainability: "Promotes repair over replacement to reduce electronic waste",
+//     keywords: ["appliance", "repair", "electronics", "washing machine", "refrigerator"],
+//     languages: "Nepali, Hindi",
+//     rate: "Nrs 700 per hour",
+//     reviews: [
+//       {id: 1, reviewer: "Ramesh Lama", rating: 4.5, comment: "Fixed my washing machine perfectly!"}
+//     ]
+//   }
+// ];
 
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 3959;
+  const R = 6371; // Earth's radius in kilometers
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * c; // Distance in km
 };
 
 export default function BrowsePage() {
@@ -26,6 +202,8 @@ export default function BrowsePage() {
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [useNearby, setUseNearby] = useState(false);
+  const [locationError, setLocationError] = useState(null);
+  const [locationPermission, setLocationPermission] = useState('prompt');
 
   const [agentMode, setAgentMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -127,12 +305,9 @@ export default function BrowsePage() {
       let distance = 999;
       if (userLocation && useNearby) {
         distance = calculateDistance(userLocation.lat, userLocation.lng, p.coordinates.lat, p.coordinates.lng);
-      } else if (p.location) {
-        const m = p.location.match(/([\d.]+)km/);
-        if (m) distance = parseFloat(m[1]) * 0.621371;
       }
 
-      return {...p, score, distance};
+      return {...p, score, distance, ratingCount: p.reviews.length};
     })
       .filter((p) => p.score > 0)
       .sort((a, b) => b.score - a.score || a.distance - b.distance)
@@ -152,40 +327,85 @@ export default function BrowsePage() {
     }
   };
 
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     setLocationLoading(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({lat: pos.coords.latitude, lng: pos.coords.longitude});
-          setUseNearby(true);
-          setLocationLoading(false);
-        },
-        () => {
-          setLocationLoading(false);
-          alert("Unable to get your location.");
-        }
-      );
-    } else {
+    setLocationError(null);
+    
+    if (!("geolocation" in navigator)) {
+      setLocationError("Geolocation is not supported by your browser");
       setLocationLoading(false);
-      alert("Geolocation not supported.");
+      return;
     }
+
+    // Check permission status if available
+    if (navigator.permissions) {
+      try {
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        setLocationPermission(permission.state);
+        
+        permission.onchange = () => {
+          setLocationPermission(permission.state);
+        };
+      } catch (err) {
+        console.log("Permission API not available");
+      }
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        setUserLocation(coords);
+        setUseNearby(true);
+        setLocationLoading(false);
+        setLocationPermission('granted');
+      },
+      (error) => {
+        setLocationLoading(false);
+        let errorMessage = "Unable to get your location. ";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Location permission was denied. Please enable location access in your browser settings.";
+            setLocationPermission('denied');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "The request to get your location timed out.";
+            break;
+          default:
+            errorMessage += "An unknown error occurred.";
+        }
+        
+        setLocationError(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const categories = [
     {id: "all", label: "All Services"},
     {id: "solar", label: "Solar Energy"},
     {id: "tailoring", label: "Tailoring"},
-    {id: "makeup", label: "Bridal Makeup"},
+    {id: "makeup", label: "Makeup & Beauty"},
+    {id: "plumbing", label: "Plumbing"},
+    {id: "carpentry", label: "Carpentry"},
+    {id: "appliance", label: "Appliance Repair"},
   ];
 
   const filteredProviders = ServiceProviders.map((p) => {
     let distance = 999;
     if (userLocation && useNearby) {
       distance = calculateDistance(userLocation.lat, userLocation.lng, p.coordinates.lat, p.coordinates.lng);
-    } else if (p.location) {
-      const m = p.location.match(/([\d.]+)km/);
-      if (m) distance = parseFloat(m[1]) * 0.621371;
     }
     return {...p, distance, ratingCount: p.reviews.length};
   })
@@ -209,7 +429,7 @@ export default function BrowsePage() {
   const displayProviders = agentMode ? voiceResults : filteredProviders;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -238,7 +458,7 @@ export default function BrowsePage() {
 
         {agentMode ? (
           <div className="space-y-6">
-            <Card className="p-8 border-2 border-purple-200 bg-linear-to-br from-purple-50 to-blue-50">
+            <Card className="p-8 border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
               <div className="text-center space-y-6">
                 <div className="flex justify-center">
                   <div className={`relative ${isListening ? "animate-pulse" : ""}`}>
@@ -350,7 +570,7 @@ export default function BrowsePage() {
 
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <MapPin className="w-4 h-4" />
-                                <span>{p.distance.toFixed(1)} mi</span>
+                                <span>{p.distance.toFixed(1)} km</span>
                               </div>
                             </div>
                           </Card>
@@ -379,14 +599,80 @@ export default function BrowsePage() {
                     placeholder="Search providers or services..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
                   />
                 </div>
-                <Button onClick={handleGetLocation} variant="outline" className="gap-2 whitespace-nowrap" disabled={locationLoading}>
-                  <Locate className="w-4 h-4" />
-                  {locationLoading ? "Getting location..." : "Use My Location"}
+                <Button 
+                  onClick={handleGetLocation} 
+                  variant="outline" 
+                  className={`gap-2 whitespace-nowrap ${locationLoading ? 'border-green-500' : ''}`}
+                  disabled={locationLoading}
+                >
+                  {locationLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="hidden sm:inline">Getting location...</span>
+                      <span className="sm:hidden">Locating...</span>
+                    </>
+                  ) : userLocation && useNearby ? (
+                    <>
+                      <Navigation className="w-4 h-4 text-green-600" />
+                      Location Active
+                    </>
+                  ) : (
+                    <>
+                      <Locate className="w-4 h-4" />
+                      Use My Location
+                    </>
+                  )}
                 </Button>
               </div>
+
+              {/* Location Status Card */}
+              {locationError && (
+                <Card className="p-4 bg-red-50 border-red-200">
+                  <div className="flex items-start gap-3">
+                    <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800 mb-1">Location Error</p>
+                      <p className="text-xs text-red-700">{locationError}</p>
+                    </div>
+                    <button
+                      onClick={() => setLocationError(null)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </Card>
+              )}
+
+              {userLocation && useNearby && !locationError && (
+                <Card className="p-4 bg-green-50 border-green-200">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800 mb-1">Location Active</p>
+                      <div className="text-xs text-green-700 space-y-1">
+                        <p>Latitude: {userLocation.lat.toFixed(6)}°</p>
+                        <p>Longitude: {userLocation.lng.toFixed(6)}°</p>
+                        {userLocation.accuracy && (
+                          <p>Accuracy: ±{Math.round(userLocation.accuracy)}m</p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUseNearby(false);
+                        setUserLocation(null);
+                      }}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </Card>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 {categories.map((c) => (
@@ -402,23 +688,7 @@ export default function BrowsePage() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                {useNearby && userLocation && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-sm">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    <span className="text-gray-700">Using your location</span>
-                    <button
-                      onClick={() => {
-                        setUseNearby(false);
-                        setUserLocation(null);
-                      }}
-                      className="ml-2 p-1 hover:bg-green-100 rounded"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-wrap">
                 <div className="relative">
                   <button onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition">
                     <Filter className="w-4 h-4" />
@@ -429,27 +699,53 @@ export default function BrowsePage() {
 
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-4 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                   <option value="rating">Highest Rated</option>
-                  <option value="distance">Nearest</option>
+                  <option value="distance">Nearest First</option>
                 </select>
+
+                {useNearby && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-sm">
+                    <Navigation className="w-4 h-4 text-blue-600" />
+                    <span className="text-gray-700">Showing within {maxDistance}km</span>
+                  </div>
+                )}
               </div>
 
               {showAdvancedFilters && (
-                <Card className="p-6 border bg-gray-50 space-y-6">
+                <Card className="p-6 border bg-gray-50 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Maximum Distance: {maxDistance} mi</label>
-                    <input type="range" min="1" max="50" value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} className="w-full" />
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Maximum Distance: {maxDistance} km
+                      {!useNearby && <span className="text-xs text-gray-500 ml-2">(Enable location to use)</span>}
+                    </label>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="50" 
+                      value={maxDistance} 
+                      onChange={(e) => setMaxDistance(Number(e.target.value))} 
+                      className="w-full accent-green-600"
+                      disabled={!useNearby}
+                    />
                     <div className="flex justify-between text-xs text-gray-500 mt-2">
-                      <span>1 mi</span>
-                      <span>50 mi</span>
+                      <span>1 km</span>
+                      <span>50 km</span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Minimum Rating: {minRating.toFixed(1)} stars</label>
-                    <input type="range" min="0" max="5" step="0.5" value={minRating} onChange={(e) => setMinRating(Number(e.target.value))} className="w-full" />
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="5" 
+                      step="0.5" 
+                      value={minRating} 
+                      onChange={(e) => setMinRating(Number(e.target.value))} 
+                      className="w-full accent-green-600"
+                    />
                     <div className="flex justify-between text-xs text-gray-500 mt-2">
-                      <span>Any</span>
-                      <span>5 stars</span>
+                      <span>Any rating</span>
+                      <span>5 stars only</span>
                     </div>
                   </div>
 
@@ -468,18 +764,38 @@ export default function BrowsePage() {
               )}
             </div>
 
-            <p className="text-sm text-gray-600 mb-6">
-              Showing {filteredProviders.length} provider{filteredProviders.length !== 1 ? "s" : ""}
-              {useNearby && " near you"}
-            </p>
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-sm text-gray-600">
+                Showing {filteredProviders.length} provider{filteredProviders.length !== 1 ? "s" : ""}
+                {useNearby && " near you"}
+                {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
+              </p>
+              {filteredProviders.length > 0 && useNearby && (
+                <p className="text-xs text-gray-500">
+                  Closest: {Math.min(...filteredProviders.map(p => p.distance)).toFixed(1)}km away
+                </p>
+              )}
+            </div>
 
             {filteredProviders.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProviders.map((p) => (
                   <Link key={p.id} href={`/provider/${p.id}`}>
-                    <Card className="h-full border hover:shadow-lg hover:border-green-300 transition-all cursor-pointer overflow-hidden">
-                      <div className="aspect-video overflow-hidden bg-gray-100">
-                        <img src={p.image || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                    <Card className="h-full border hover:shadow-lg hover:border-green-300 transition-all cursor-pointer overflow-hidden group">
+                      <div className="aspect-video overflow-hidden bg-gray-100 relative">
+                        <img src={p.image || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        {p.verification && (
+                          <div className="absolute top-3 right-3 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Verified
+                          </div>
+                        )}
+                        {useNearby && p.distance < 2 && (
+                          <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                            <Navigation className="w-3 h-3" />
+                            Nearby
+                          </div>
+                        )}
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{p.name}</h3>
@@ -495,9 +811,14 @@ export default function BrowsePage() {
                           <span className="text-xs text-gray-500">({p.ratingCount})</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <MapPin className="w-4 h-4" />
-                          <span>{useNearby ? `${p.distance.toFixed(1)} mi` : p.location}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <MapPin className="w-4 h-4" />
+                            <span>{useNearby ? `${p.distance.toFixed(1)} km away` : p.city}</span>
+                          </div>
+                          <div className="text-xs font-medium text-green-600">
+                            {p.rate}
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -508,20 +829,33 @@ export default function BrowsePage() {
               <Card className="p-12 text-center border">
                 <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-800 mb-2">No providers found</h3>
-                <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("all");
-                    setMaxDistance(25);
-                    setMinRating(0);
-                    setUseNearby(false);
-                    setUserLocation(null);
-                  }}
-                >
-                  Clear All Filters
-                </Button>
+                <p className="text-gray-600 mb-6">
+                  {useNearby 
+                    ? `No providers found within ${maxDistance}km of your location. Try increasing the distance range.`
+                    : "Try adjusting your search or filters"
+                  }
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setMaxDistance(25);
+                      setMinRating(0);
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                  {useNearby && maxDistance < 50 && (
+                    <Button
+                      onClick={() => setMaxDistance(50)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Expand to 50km
+                    </Button>
+                  )}
+                </div>
               </Card>
             )}
           </>

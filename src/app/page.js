@@ -71,7 +71,7 @@ export default function Home() {
                 Browse Services <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/signup?type=provider">
               <Button size="lg" variant="outline">
                 Become a Provider
               </Button>

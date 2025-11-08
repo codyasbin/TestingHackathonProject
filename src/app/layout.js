@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { StoreProvider } from "./providers/storeProvider";
 import SocketProvider from "./providers/socketProvider";
+import { ToastContainer } from "react-toastify";
+import Header from "./components/header";
+import AudioUnlockButton from "./components/AudioUnlockButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +27,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SocketProvider>
+          {/* <AudioUnlockButton /> */}
           <StoreProvider>{children}</StoreProvider>
         </SocketProvider>
+        <ToastContainer />
       </body>
     </html>
   );

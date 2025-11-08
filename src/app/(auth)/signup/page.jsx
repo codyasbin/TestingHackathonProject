@@ -8,13 +8,19 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Checkbox} from "@/components/ui/checkbox";
+import { toast } from "react-toastify";
+import { useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userType, setUserType] = useState("consumer"); // customer or provider
+  const [userType, setUserType] = useState("customer"); // customer or provider
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const searchParams = useSearchParams();
+  const userTyopeFromParams = searchParams.get("type");
+  if (userTyopeFromParams && (userTyopeFromParams === "customer" || userTyopeFromParams === "provider") && userTyopeFromParams !== userType) {
+    setUserType(userTyopeFromParams);
+  }
 
   const {
     register,
@@ -31,51 +37,56 @@ export default function SignupPage() {
     setIsSubmitting(true);
 
     try {
+      // Generate a unique user ID
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       // Create user object
       const newUser = {
+        id: userId,
         name: data.name,
         email: data.email,
         phone_number: data.phone,
         password: data.password,
         role: userType,
+        createdAt: new Date().toISOString(),
         ...(userType === "provider" && {
-          skills: skills,
+          skills: skills.includes("Other") && data.otherSkill 
+            ? [...skills.filter(s => s !== "Other"), data.otherSkill]
+            : skills,
           year_of_experience: data.experience,
           location: data.location,
         }),
       };
 
-      // Hit the API with the newUser data
-      const response = await fetch(`${API_URL}signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newUser),
-      });
+      // Get existing users from localStorage
+      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+      // Check if email already exists
+      const emailExists = existingUsers.some(user => user.email === data.email);
+      if (emailExists) {
+        alert("An account with this email already exists!");
+        setIsSubmitting(false);
+        return;
       }
 
-      const result = await response.json();
-      const userId = result.id;
+      // Add new user to the array
+      existingUsers.push(newUser);
 
-      // Save the id to localStorage
-      sessionStorage.setItem("id", userId);
-      sessionStorage.setItem("role", result.role);
+      // Save back to localStorage
+      localStorage.setItem("users", JSON.stringify(existingUsers));
 
-      alert("Account created successfully!");
+      // Save current user session
+      localStorage.setItem("id", userId);
+      localStorage.setItem("role", userType);
+      localStorage.setItem("currentUser", JSON.stringify(newUser));
+
+      toast.success("Account created successfully!");
 
       // Redirect based on user type
-      if (userType === "consumer") {
-        router.push("/dashboard");
-      } else {
-        router.push("/profile/service-provider");
-      }
+      router.push("/login");
     } catch (error) {
       console.error("Signup error:", error);
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -124,7 +135,7 @@ export default function SignupPage() {
                     message: "Name must be at least 2 characters",
                   },
                 })}
-                placeholder="John Doe"
+                placeholder="ram bahadur"
               />
               {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
             </div>
@@ -142,7 +153,7 @@ export default function SignupPage() {
                     message: "Invalid email address",
                   },
                 })}
-                placeholder="john@example.com"
+                placeholder="ram@example.com"
               />
               {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
             </div>

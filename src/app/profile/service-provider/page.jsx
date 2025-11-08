@@ -6,6 +6,11 @@ import { Card } from "@/components/ui/card"
 import { Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2, DollarSign, Clock, CheckCircle, Wrench, Star, Sparkles, Loader2, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Header from "@/app/components/header";
+import Footer from "@/app/components/footer";
+
+
+
 
 export default function ServiceProviderProfile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +56,7 @@ export default function ServiceProviderProfile() {
     const currentUser = localStorage.getItem("currentUser");
     if (currentUser) {
       const user = JSON.parse(currentUser);
-      if (user.userType === "provider") {
+      if (user.role === "provider") {
         setProfile((prev) => ({
           ...prev,
           name: user.name || prev.name,
@@ -194,7 +199,8 @@ export default function ServiceProviderProfile() {
   return (
     <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur shadow-sm">
+      <Header/>
+      {/* <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Leaf className="w-6 h-6 text-green-600" />
@@ -216,7 +222,7 @@ export default function ServiceProviderProfile() {
             </Button>
           </div>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-start justify-between mb-8">
@@ -606,7 +612,7 @@ export default function ServiceProviderProfile() {
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex gap-4">
+        <div className="my-8 flex gap-4">
           <Button variant="outline" className="gap-2">
             <Settings className="w-4 h-4" />
             Account Settings
@@ -616,6 +622,7 @@ export default function ServiceProviderProfile() {
             Sign out
           </Button>
         </div>
+        <Footer/>
       </div>
 
       {/* AI Enhancement Modal */}
