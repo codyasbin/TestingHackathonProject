@@ -9,7 +9,7 @@ export default function Footer() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Leaf className="w-5 h-5 text-primary" />
-                <span className="font-bold text-foreground">GreenCircle</span>
+                <span className="font-bold text-foreground">Sahayog</span>
               </div>
               <p className="text-sm text-muted-foreground">Building sustainable communities, one service at a time.</p>
             </div>
@@ -75,7 +75,7 @@ export default function Footer() {
             </div>
           </div>
           <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 GreenCircle. Committed to sustainability.</p>
+            <p>&copy; 2025 Sahayog. Committed to sustainability.</p>
           </div>
         </div>
       </footer>

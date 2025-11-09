@@ -12,6 +12,8 @@ import {useRouter} from "next/navigation";
 import Header from "./components/header";
 import FeaturedProviders from "./components/Featured-Providers";
 
+
+
 export default function Home() {
   const router = useRouter();
   const serviceCategories = [

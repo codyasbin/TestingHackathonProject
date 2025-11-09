@@ -1,18 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Gift, Star, Zap, Trophy, TrendingUp, CheckCircle, Lock, Sparkles } from "lucide-react"
+import { Gift, Star, Zap, Trophy, TrendingUp, CheckCircle, Lock, Sparkles, Copy, Check } from "lucide-react"
+import { toast } from "react-toastify"
+import Header from "../components/header"
 
 export default function RewardsPage() {
-  const [userPoints, setUserPoints] = useState(2450)
+  const [userPoints, setUserPoints] = useState(0)
   const [redeemedCoupons, setRedeemedCoupons] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
+  const [copiedCode, setCopiedCode] = useState(null)
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Get current user
+      const user = localStorage.getItem("currentUser");
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        setCurrentUser(parsedUser);
+
+        // Load user points
+        const pointsData = JSON.parse(localStorage.getItem("userPoints") || "{}");
+        setUserPoints(pointsData[parsedUser.id] || 2450); // Default points
+
+        // Load redeemed coupons
+        const couponsData = JSON.parse(localStorage.getItem("redeemedCoupons") || "{}");
+        setRedeemedCoupons(couponsData[parsedUser.id] || []);
+      }
+    }
+  }, []);
 
   const pointsHistory = [
-    { id: 1, action: "Completed repair booking", points: 500, date: "2024-11-05" },
+    { id: 1, action: "Used eco-friendly service", points: 500, date: "2024-11-05" },
     { id: 2, action: "Referred a friend", points: 300, date: "2024-11-01" },
-    { id: 3, action: "Used eco-friendly service", points: 200, date: "2024-10-28" },
+    { id: 3, action: "Completed repair booking", points: 200, date: "2024-10-28" },
     { id: 4, action: "Profile completed", points: 150, date: "2024-10-25" },
     { id: 5, action: "First booking", points: 500, date: "2024-10-20" },
     { id: 6, action: "Wrote a review", points: 100, date: "2024-10-18" },
@@ -28,30 +52,36 @@ export default function RewardsPage() {
       title: "10% OFF",
       description: "Get 10% discount on any service",
       points: 500,
-      type: "discount",
+      type: "percentage",
+      discountValue: 10,
       icon: "🎟️",
       color: "blue",
-      validity: "30 days"
+      validity: "30 days",
+      validityDays: 30
     },
     {
       id: 2,
       title: "15% OFF",
       description: "Get 15% discount on any service",
       points: 800,
-      type: "discount",
+      type: "percentage",
+      discountValue: 15,
       icon: "🎫",
       color: "purple",
-      validity: "30 days"
+      validity: "30 days",
+      validityDays: 30
     },
     {
       id: 3,
       title: "20% OFF",
       description: "Get 20% discount on any service",
       points: 1200,
-      type: "discount",
+      type: "percentage",
+      discountValue: 20,
       icon: "🏷️",
       color: "pink",
-      validity: "45 days"
+      validity: "45 days",
+      validityDays: 45
     },
     {
       id: 4,
@@ -59,9 +89,11 @@ export default function RewardsPage() {
       description: "Free 30-minute consultation with any expert",
       points: 600,
       type: "service",
+      discountValue: 0,
       icon: "💬",
       color: "green",
-      validity: "60 days"
+      validity: "60 days",
+      validityDays: 60
     },
     {
       id: 5,
@@ -69,39 +101,47 @@ export default function RewardsPage() {
       description: "Get priority customer support for 1 month",
       points: 1000,
       type: "service",
+      discountValue: 0,
       icon: "⚡",
       color: "yellow",
-      validity: "30 days"
+      validity: "30 days",
+      validityDays: 30
     },
     {
       id: 6,
-      title: "Free Service (Up to $50)",
-      description: "Get any service worth up to $50 completely free",
+      title: "$50 OFF",
+      description: "Get $50 off on any service",
       points: 2000,
-      type: "service",
+      type: "fixed",
+      discountValue: 50,
       icon: "🎁",
       color: "red",
-      validity: "90 days"
+      validity: "90 days",
+      validityDays: 90
     },
     {
       id: 7,
       title: "25% OFF Premium",
       description: "Get 25% off on premium services only",
       points: 1500,
-      type: "discount",
+      type: "percentage",
+      discountValue: 25,
       icon: "👑",
       color: "indigo",
-      validity: "60 days"
+      validity: "60 days",
+      validityDays: 60
     },
     {
       id: 8,
-      title: "Double Points Week",
-      description: "Earn 2x Sahayog Points on all bookings for 7 days",
-      points: 1800,
-      type: "special",
-      icon: "✨",
+      title: "$30 OFF",
+      description: "Get $30 off on any service",
+      points: 1200,
+      type: "fixed",
+      discountValue: 30,
+      icon: "💰",
       color: "orange",
-      validity: "Available to activate anytime"
+      validity: "45 days",
+      validityDays: 45
     },
   ]
 
@@ -128,12 +168,61 @@ export default function RewardsPage() {
     return colors[color] || colors.blue
   }
 
+  const generateCouponCode = () => {
+    return `SAHAYOG${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  }
+
   const handleRedeem = (coupon) => {
-    if (userPoints >= coupon.points) {
-      setUserPoints(userPoints - coupon.points)
-      setRedeemedCoupons([...redeemedCoupons, { ...coupon, redeemedAt: new Date().toISOString() }])
-      alert(`🎉 Congratulations! You've redeemed: ${coupon.title}\n\nYour coupon code: SAHAYOG${Math.random().toString(36).substr(2, 9).toUpperCase()}\n\nValid for: ${coupon.validity}`)
+    if (!currentUser) {
+      toast.error("Please login to redeem coupons");
+      return;
     }
+
+    if (userPoints >= coupon.points) {
+      const couponCode = generateCouponCode();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + coupon.validityDays);
+
+      const redeemedCoupon = {
+        ...coupon,
+        code: couponCode,
+        redeemedAt: new Date().toISOString(),
+        expiresAt: expiryDate.toISOString(),
+        used: false,
+        active: true
+      };
+
+      // Update points
+      const newPoints = userPoints - coupon.points;
+      setUserPoints(newPoints);
+
+      // Save points to localStorage
+      const pointsData = JSON.parse(localStorage.getItem("userPoints") || "{}");
+      pointsData[currentUser.id] = newPoints;
+      localStorage.setItem("userPoints", JSON.stringify(pointsData));
+
+      // Update redeemed coupons
+      const newCoupons = [...redeemedCoupons, redeemedCoupon];
+      setRedeemedCoupons(newCoupons);
+
+      // Save coupons to localStorage
+      const couponsData = JSON.parse(localStorage.getItem("redeemedCoupons") || "{}");
+      couponsData[currentUser.id] = newCoupons;
+      localStorage.setItem("redeemedCoupons", JSON.stringify(couponsData));
+
+      toast.success(
+        `🎉 Congratulations! You've redeemed: ${coupon.title}\n\nYour coupon code: ${couponCode}\n\nValid until: ${expiryDate.toLocaleDateString()}`
+      );
+    } else {
+      toast.error(`You need ${coupon.points - userPoints} more points to redeem this coupon`);
+    }
+  }
+
+  const copyCouponCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast.success("Coupon code copied to clipboard!");
+    setTimeout(() => setCopiedCode(null), 2000);
   }
 
   const getNextMilestone = () => {
@@ -146,29 +235,42 @@ export default function RewardsPage() {
   const nextMilestone = getNextMilestone()
   const milestoneProgress = (userPoints / nextMilestone.points) * 100
 
+  // Filter active (non-expired, unused) coupons
+  const activeCoupons = redeemedCoupons.filter(coupon => {
+    const isExpired = new Date(coupon.expiresAt) < new Date();
+    return !coupon.used && !isExpired;
+  });
+
+  const usedCoupons = redeemedCoupons.filter(coupon => coupon.used);
+  const expiredCoupons = redeemedCoupons.filter(coupon => {
+    const isExpired = new Date(coupon.expiresAt) < new Date();
+    return !coupon.used && isExpired;
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-16">
+      <Header />
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full mb-4 backdrop-blur-sm">
               <Sparkles className="w-5 h-5" />
               <span className="font-semibold">Sahayog Rewards Program</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Your Reward Points
             </h1>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto">
-              Earn points with every repair and redeem amazing rewards!
+            <p className="text-xl text-emerald-100 max-w-2xl mx-auto">
+              Earn points with every service and redeem amazing rewards!
             </p>
           </div>
 
           {/* Points Display */}
           <div className="mt-12 max-w-2xl mx-auto">
-            <Card className="bg-white/95 backdrop-blur p-8 shadow-2xl">
+            <Card className="bg-white/95 backdrop-blur p-8 shadow-2xl border border-emerald-200">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4 shadow-lg">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full mb-4 shadow-lg">
                   <Star className="w-10 h-10 text-white fill-white" />
                 </div>
                 <h2 className="text-5xl font-bold text-gray-800 mb-2">
@@ -185,7 +287,7 @@ export default function RewardsPage() {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(milestoneProgress, 100)}%` }}
                   />
                 </div>
@@ -202,7 +304,7 @@ export default function RewardsPage() {
         {/* Available Coupons */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <Gift className="w-8 h-8 text-green-600" />
+            <Gift className="w-8 h-8 text-emerald-600" />
             <h2 className="text-3xl font-bold text-gray-800">Redeem Rewards</h2>
           </div>
 
@@ -212,10 +314,10 @@ export default function RewardsPage() {
               return (
                 <Card
                   key={coupon.id}
-                  className={`relative overflow-hidden transition-all duration-300 ${
+                  className={`relative overflow-hidden transition-all duration-300 border-2 ${
                     canAfford
-                      ? "hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
-                      : "opacity-60"
+                      ? "hover:shadow-2xl hover:-translate-y-1 cursor-pointer border-emerald-200"
+                      : "opacity-60 border-gray-200"
                   }`}
                 >
                   <div className={`h-2 bg-gradient-to-r ${getColorClasses(coupon.color)}`} />
@@ -233,7 +335,7 @@ export default function RewardsPage() {
                       {coupon.description}
                     </p>
                     <div className="flex items-center gap-2 mb-4">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                       <span className="font-bold text-gray-800">{coupon.points} points</span>
                     </div>
                     <p className="text-xs text-gray-500 mb-4">Valid for: {coupon.validity}</p>
@@ -242,7 +344,7 @@ export default function RewardsPage() {
                       disabled={!canAfford}
                       className={`w-full ${
                         canAfford
-                          ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                           : "bg-gray-300 cursor-not-allowed"
                       }`}
                     >
@@ -265,14 +367,14 @@ export default function RewardsPage() {
 
             <div className="grid md:grid-cols-2 gap-4 mb-8">
               {earnMoreWays.map((way, index) => (
-                <Card key={index} className="p-6 bg-white hover:shadow-lg transition-shadow">
+                <Card key={index} className="p-6 bg-white hover:shadow-lg transition-shadow border border-emerald-100">
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">{way.icon}</div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-800 mb-1">{way.action}</h3>
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-bold text-green-600">+{way.points} points</span>
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <span className="font-bold text-emerald-600">+{way.points} points</span>
                       </div>
                     </div>
                   </div>
@@ -286,14 +388,14 @@ export default function RewardsPage() {
               <h2 className="text-3xl font-bold text-gray-800">Points History</h2>
             </div>
 
-            <Card className="bg-white">
+            <Card className="bg-white border border-emerald-100">
               <div className="divide-y">
                 {pointsHistory.map((item) => (
-                  <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div key={item.id} className="p-4 hover:bg-emerald-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
                           <p className="font-medium text-gray-800">{item.action}</p>
@@ -301,8 +403,8 @@ export default function RewardsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-lg font-bold text-green-600">+{item.points}</span>
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-lg font-bold text-emerald-600">+{item.points}</span>
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                       </div>
                     </div>
                   </div>
@@ -313,38 +415,99 @@ export default function RewardsPage() {
 
           {/* Redeemed Coupons & Info */}
           <div className="space-y-6">
-            {/* Redeemed Coupons */}
-            <Card className="p-6 bg-white">
+            {/* Active Coupons */}
+            <Card className="p-6 bg-white border border-emerald-100">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                My Coupons
+                <Zap className="w-5 h-5 text-amber-500" />
+                Active Coupons ({activeCoupons.length})
               </h3>
-              {redeemedCoupons.length === 0 ? (
+              {activeCoupons.length === 0 ? (
                 <div className="text-center py-8">
                   <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">No coupons redeemed yet</p>
-                  <p className="text-gray-400 text-xs mt-1">Start redeeming to see your coupons here!</p>
+                  <p className="text-gray-500 text-sm">No active coupons</p>
+                  <p className="text-gray-400 text-xs mt-1">Redeem coupons above to use at checkout!</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {redeemedCoupons.map((coupon, index) => (
-                    <div key={index} className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">{coupon.icon}</span>
-                        <span className="font-semibold text-gray-800 text-sm">{coupon.title}</span>
+                  {activeCoupons.map((coupon, index) => (
+                    <div key={index} className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{coupon.icon}</span>
+                          <span className="font-bold text-gray-800 text-sm">{coupon.title}</span>
+                        </div>
+                        <span className="text-xs bg-emerald-600 text-white px-2 py-1 rounded-full font-semibold">
+                          ACTIVE
+                        </span>
                       </div>
-                      <p className="text-xs text-gray-600">{coupon.description}</p>
-                      <p className="text-xs text-green-600 font-medium mt-2">
-                        Valid: {coupon.validity}
-                      </p>
+                      <p className="text-xs text-gray-600 mb-3">{coupon.description}</p>
+                      
+                      {/* Coupon Code */}
+                      <div className="bg-white border-2 border-dashed border-emerald-300 rounded-lg p-3 mb-2">
+                        <p className="text-xs text-gray-500 mb-1">Coupon Code:</p>
+                        <div className="flex items-center justify-between">
+                          <code className="font-mono font-bold text-emerald-700 text-sm">
+                            {coupon.code}
+                          </code>
+                          <button
+                            onClick={() => copyCouponCode(coupon.code)}
+                            className="p-1.5 hover:bg-emerald-100 rounded transition-colors"
+                          >
+                            {copiedCode === coupon.code ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-600" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">
+                          Expires: {new Date(coupon.expiresAt).toLocaleDateString()}
+                        </span>
+                        {coupon.type === "percentage" && (
+                          <span className="font-semibold text-emerald-600">
+                            {coupon.discountValue}% OFF
+                          </span>
+                        )}
+                        {coupon.type === "fixed" && (
+                          <span className="font-semibold text-emerald-600">
+                            ${coupon.discountValue} OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </Card>
 
+            {/* Used Coupons */}
+            {usedCoupons.length > 0 && (
+              <Card className="p-6 bg-white border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                  Used Coupons ({usedCoupons.length})
+                </h3>
+                <div className="space-y-2">
+                  {usedCoupons.map((coupon, index) => (
+                    <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-lg opacity-60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm">{coupon.icon}</span>
+                        <span className="font-medium text-gray-700 text-xs">{coupon.title}</span>
+                        <span className="text-xs bg-gray-400 text-white px-2 py-0.5 rounded-full ml-auto">
+                          USED
+                        </span>
+                      </div>
+                      <code className="text-xs text-gray-500 font-mono">{coupon.code}</code>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* Program Benefits */}
-            <Card className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+            <Card className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Program Benefits</h3>
               <ul className="space-y-3 text-sm">
                 <li className="flex items-start gap-2">
@@ -365,34 +528,42 @@ export default function RewardsPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                  <span className="text-gray-700">Points never expire</span>
+                  <span className="text-gray-700">Use coupons at checkout</span>
                 </li>
               </ul>
             </Card>
 
             {/* Quick Stats */}
-            <Card className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+            <Card className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Your Stats</h3>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Total Earned</span>
-                    <span className="font-bold text-gray-800">3,200 points</span>
+                    <span className="text-gray-600">Available Points</span>
+                    <span className="font-bold text-gray-800">{userPoints.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: "76%" }} />
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${Math.min((userPoints / 5000) * 100, 100)}%` }} />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Redeemed</span>
-                    <span className="font-bold text-gray-800">{redeemedCoupons.length} coupons</span>
+                    <span className="text-gray-600">Active Coupons</span>
+                    <span className="font-bold text-emerald-600">{activeCoupons.length}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Total Redeemed</span>
+                    <span className="font-bold text-gray-800">{redeemedCoupons.length}</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Rank</span>
-                    <span className="font-bold text-gray-800">Silver Member</span>
+                    <span className="font-bold text-gray-800">
+                      {userPoints >= 5000 ? "Gold" : userPoints >= 2500 ? "Silver" : "Bronze"} Member
+                    </span>
                   </div>
                 </div>
               </div>
