@@ -7,6 +7,8 @@ import Header from "@/app/components/header";
 import Footer from "@/app/components/footer";
 import BookingModal from "@/app/components/booking-modal";
 import {ServiceProviders} from "@/data/ServiceProvider";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 // ✅ lucide-react icons
 import {ArrowLeft, Star, CheckCircle, Leaf, MapPin, MessageCircle, ShieldCheck, Clock, Globe, DollarSign} from "lucide-react";
@@ -20,6 +22,40 @@ export default function ProviderDetail() {
 
   const [showBooking, setShowBooking] = useState(false);
   const [bookingData, setBookingData] = useState(null);
+  const router = useRouter();
+
+  const expressBaseUrl =  "http://localhost:3001";
+
+
+  const handleClickOnlineMeet = () => {
+    async function initiateOnlineMeeting() {
+      try {
+        const response = await fetch(`${expressBaseUrl}/api/incoming-call`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            incomingCall: true,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to initiate online meeting");
+        }
+
+        const data = await response.json();
+        // console.log("Online meeting initiated:", data);
+        toast.success("Online meeting request sent successfully");
+        router.push("/online-room");
+        
+      } catch (error) {
+        console.error("Error initiating online meeting:", error);
+      }
+    }
+
+    initiateOnlineMeeting();
+  };
 
   if (!provider) {
     return (
@@ -150,8 +186,8 @@ export default function ProviderDetail() {
                   Request Booking
                 </button>
 
-                <button className="w-full border-2 border-primary-foreground py-2 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 transition flex items-center justify-center gap-1">
-                  <MessageCircle size={16} /> Message Provider
+                <button onClick={handleClickOnlineMeet} className="w-full cursor-pointer border-2 border-primary-foreground py-2 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 transition flex items-center justify-center gap-1">
+                  <MessageCircle size={16} /> Request Online Meet
                 </button>
 
                 <div className="mt-6 pt-6 border-t border-primary-foreground/20 text-xs opacity-80 space-y-1">

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Leaf, Mail, Phone, MapPin, Award, TrendingUp, Settings, LogOut, Edit2 } from "lucide-react"
 import Link from "next/link"
+import Header from "../components/header"
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -19,10 +20,26 @@ export default function ProfilePage() {
     memberSince: "2024",
   })
 
+
+  // fetch userdata from localStorage on component mount
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"))
+    if (currentUser) {
+      setProfile((prev) => ({
+        ...prev,
+        name: currentUser.name || prev.name,
+        email: currentUser.email || prev.email,
+        phone: currentUser.phone || prev.phone,
+        // location: currentUser.location || prev.location,
+      }))
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+      <Header />
+      {/* <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Leaf className="w-6 h-6 text-primary" />
@@ -37,7 +54,7 @@ export default function ProfilePage() {
             </Button>
           </div>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-start justify-between mb-8">
@@ -56,7 +73,7 @@ export default function ProfilePage() {
           <Card className="lg:col-span-2 p-8 border border-border">
             <div className="flex items-start gap-6 mb-8 pb-8 border-b border-border">
               <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-3xl font-bold text-primary">SJ</span>
+                <span className="text-3xl font-bold text-primary">{profile.name[0]}</span>
               </div>
               <div className="flex-1">
                 {isEditing ? (

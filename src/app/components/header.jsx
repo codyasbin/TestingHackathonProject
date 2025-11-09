@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useState, useEffect} from "react";
-import {useRouter} from "next/navigation";
+import {useRouter, usePathname} from "next/navigation";
 import {Leaf} from "lucide-react";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 import {Avatar, AvatarImage, AvatarFallback} from "@/components/ui/avatar";
@@ -10,44 +10,118 @@ import {Button} from "@/components/ui/button";
 
 export default function Header() {
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const loadUser = () => {
-      const raw = sessionStorage.getItem("currentUser");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed.id) setUser(parsed);
-        } catch {
-          sessionStorage.removeItem("currentUser");
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("currentUser");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.id) {
+              setUser(parsed);
+            }
+          } catch (error) {
+            console.error("Error parsing user data:", error);
+            localStorage.removeItem("currentUser");
+            setUser(null);
+          }
+        } else {
+          setUser(null);
         }
       }
     };
 
+    // Load user on mount and whenever pathname changes
     loadUser();
 
-    const handler = (e) => {
-      if (e.key === "user") loadUser();
+    // Listen for custom events (useful for cross-component updates)
+    const handleUserUpdate = () => {
+      loadUser();
     };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+
+    window.addEventListener("userLogin", handleUserUpdate);
+    window.addEventListener("userLogout", handleUserUpdate);
+
+    // Listen for storage changes (works across tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === "currentUser" || e.key === "id" || e.key === "role") {
+        loadUser();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("userLogin", handleUserUpdate);
+      window.removeEventListener("userLogout", handleUserUpdate);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [pathname]); // Re-run when pathname changes
 
   const handleLogout = () => {
-    sessionStorage.removeItem("user");
-    setUser(null);
-    router.push("/login");
+    if (typeof window !== "undefined") {
+      // Clear all session data
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("id");
+      localStorage.removeItem("role");
+      
+      // Update state
+      setUser(null);
+      
+      // Dispatch custom event
+      window.dispatchEvent(new Event("userLogout"));
+      
+      // Redirect to login
+      router.push("/login");
+    }
   };
 
   const go = (path) => () => router.push(path);
+
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <header className="sticky top-0 z-50 bg-card border-b border-border">
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Leaf className="w-6 h-6 text-primary" />
+              <span className="text-xl font-bold text-foreground">Sahayog</span>
+            </div>
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="/browse" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Services
+              </Link>
+              <Link href="#impact" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Our Impact
+              </Link>
+              <Link href="#about" className="text-sm text-muted-foreground hover:text-foreground transition">
+                About
+              </Link>
+              <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Contact
+              </Link>
+            </div>
+            <div className="w-32 h-10"></div>
+          </div>
+        </nav>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border">
       <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div onClick={go("/")} className="flex items-center gap-2 cursor-pointer">
             <Leaf className="w-6 h-6 text-primary" />
             <span className="text-xl font-bold text-foreground">Sahayog</span>
           </div>
@@ -84,13 +158,17 @@ export default function Header() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
                       <p className="text-xs leading-none text-muted-foreground">{user.email || "user@example.com"}</p>
-                      {user.role && <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">{user.role}</span>}
+                      {user.role && (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full capitalize">
+                          {user.role}
+                        </span>
+                      )}
                     </div>
                   </DropdownMenuLabel>
 
                   <DropdownMenuSeparator />
 
-                  <DropdownMenuItem onClick={go("/profile")} className="cursor-pointer">
+                  <DropdownMenuItem onClick={user.role === "provider" ? go("/profile/service-provider") : go("/profile")} className="cursor-pointer">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>

@@ -2,10 +2,15 @@
 
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import Header from "../components/header";
+import Footer from "../components/footer";
+import { toast } from "react-toastify";
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const baseUrl= process.env.NEXT_PUBLIC_BASE_URL || "localhost:3000";
 
   const {
     register,
@@ -18,33 +23,26 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      // Get existing contacts from localStorage
-      const existingContacts = JSON.parse(localStorage.getItem("contacts") || "[]");
+      const response = await fetch(`${baseUrl}/api/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      // Create contact object
-      const newContact = {
-        id: Date.now().toString(),
-        ...data,
-        createdAt: new Date().toISOString(),
-        status: "pending"
-      };
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
 
-      // Add to contacts array
-      existingContacts.push(newContact);
-
-      // Save to localStorage
-      localStorage.setItem("contacts", JSON.stringify(existingContacts));
-
+      const result = await response.json();
+      // console.log("Email sent successfully:", result);
+      toast.success("Email sent successfully!");
       setSubmitSuccess(true);
       reset();
-
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false);
-      }, 5000);
     } catch (error) {
       console.error("Contact form error:", error);
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -53,6 +51,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
       {/* Hero Section */}
+      <Header />
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -97,7 +96,7 @@ export default function ContactPage() {
                     href="mailto:support@repairfirst.com"
                     className="text-green-600 font-medium hover:text-green-700"
                   >
-                    support@repairfirst.com
+                    Sahayog@gmail.com
                   </a>
                 </div>
               </div>
@@ -170,8 +169,8 @@ export default function ContactPage() {
                     Come say hello at our office
                   </p>
                   <p className="text-emerald-600 font-medium">
-                    Lakeside, Pokhara<br />
-                    Kaski, Nepal
+                    Chitwan, Bharatpur<br />
+                     Nepal
                   </p>
                 </div>
               </div>
@@ -428,6 +427,8 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
+
+        <Footer />
 
         {/* FAQ Section */}
         {/* <div className="mt-16 bg-white rounded-xl shadow-lg p-8">
