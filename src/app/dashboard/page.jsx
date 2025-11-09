@@ -1,225 +1,341 @@
-"use client"
+"use client";
+import { useState, useEffect } from 'react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Header from '../components/header';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import Link from "next/link"
-import { Calendar, MapPin, Clock, Star, MoreVertical, Edit, Trash2, Phone, Leaf, ArrowRight } from "lucide-react"
+export default function AnalyticsPage() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState('');
 
-// Mock booking history
-const mockBookings = [
-  {
-    id: "BC-ABC123XYZ",
-    provider: "Green Thumb Landscaping",
-    service: "Organic Garden Setup",
-    date: "2025-01-15",
-    time: "10:00 AM",
-    location: "San Francisco, CA",
-    price: "$800",
-    status: "confirmed",
-    rating: null,
-  },
-  {
-    id: "BC-DEF456UVW",
-    provider: "Sunny Solutions",
-    service: "Solar Panel Installation Consultation",
-    date: "2024-12-20",
-    time: "2:00 PM",
-    location: "San Francisco, CA",
-    price: "$150",
-    status: "completed",
-    rating: 5,
-  },
-  {
-    id: "BC-GHI789RST",
-    provider: "Waste Wise Co.",
-    service: "Composting Setup",
-    date: "2024-11-10",
-    time: "11:00 AM",
-    location: "Oakland, CA",
-    price: "$300",
-    status: "completed",
-    rating: 4,
-  },
-]
 
-export default function Dashboard() {
-  const [bookings, setBookings] = useState(mockBookings)
-  const [activeMenu, setActiveMenu] = useState(null)
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-  const handleCancelBooking = (id) => {
-    setBookings(bookings.filter((b) => b.id !== id))
-    setActiveMenu(null)
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    setUserRole(role || 'user');
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/bookings`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setBookings(result.data);
+      } else {
+        setError('Failed to fetch bookings');
+      }
+    } catch (err) {
+      setError('Error fetching bookings: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate analytics based on user role
+  const getAnalytics = () => {
+    if (bookings.length === 0) return null;
+
+    // Filter bookings based on role
+    let filteredBookings = bookings;
+    const userId = localStorage.getItem('userId');
+    
+    if (userRole === 'customer' && userId) {
+      filteredBookings = bookings.filter(b => b.customerId === userId);
+      // If no bookings match, show all (user might be viewing as admin/general)
+      if (filteredBookings.length === 0) {
+        filteredBookings = bookings;
+      }
+    } else if (userRole === 'provider') {
+      const providerId = localStorage.getItem('providerId');
+      if (providerId) {
+        filteredBookings = bookings.filter(b => b.providerId === providerId);
+        // If no bookings match, show all
+        if (filteredBookings.length === 0) {
+          filteredBookings = bookings;
+        }
+      }
+    }
+    // For admin or any other role, show all bookings
+
+    // Total revenue
+    const totalRevenue = filteredBookings.reduce((sum, b) => sum + b.total, 0);
+    
+    // Average booking value
+    const avgBookingValue = totalRevenue / filteredBookings.length;
+
+    // Status distribution
+    const statusCount = filteredBookings.reduce((acc, b) => {
+      acc[b.status] = (acc[b.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const statusData = Object.entries(statusCount).map(([status, count]) => ({
+      name: status.charAt(0).toUpperCase() + status.slice(1),
+      value: count
+    }));
+
+    // Service distribution
+    const serviceCount = filteredBookings.reduce((acc, b) => {
+      acc[b.service] = (acc[b.service] || 0) + 1;
+      return acc;
+    }, {});
+
+    const serviceData = Object.entries(serviceCount).map(([service, count]) => ({
+      service,
+      bookings: count
+    }));
+
+    // Revenue by service
+    const revenueByService = filteredBookings.reduce((acc, b) => {
+      acc[b.service] = (acc[b.service] || 0) + b.total;
+      return acc;
+    }, {});
+
+    const revenueData = Object.entries(revenueByService).map(([service, revenue]) => ({
+      service,
+      revenue
+    }));
+
+    // Payment method distribution
+    const paymentCount = filteredBookings.reduce((acc, b) => {
+      acc[b.paymentMethod] = (acc[b.paymentMethod] || 0) + 1;
+      return acc;
+    }, {});
+
+    const paymentData = Object.entries(paymentCount).map(([method, count]) => ({
+      name: method.toUpperCase(),
+      value: count
+    }));
+
+    // Bookings over time
+    const bookingsByDate = filteredBookings.reduce((acc, b) => {
+      const date = new Date(b.createdAt).toLocaleDateString();
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    const timeData = Object.entries(bookingsByDate).map(([date, count]) => ({
+      date,
+      bookings: count
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Provider performance (for admin)
+    const providerStats = filteredBookings.reduce((acc, b) => {
+      if (!acc[b.provider]) {
+        acc[b.provider] = { bookings: 0, revenue: 0 };
+      }
+      acc[b.provider].bookings += 1;
+      acc[b.provider].revenue += b.total;
+      return acc;
+    }, {});
+
+    const providerData = Object.entries(providerStats).map(([provider, stats]) => ({
+      provider,
+      bookings: stats.bookings,
+      revenue: stats.revenue
+    }));
+
+    return {
+      totalBookings: filteredBookings.length,
+      totalRevenue,
+      avgBookingValue,
+      statusData,
+      serviceData,
+      revenueData,
+      paymentData,
+      timeData,
+      providerData
+    };
+  };
+
+  const analytics = getAnalytics();
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-xl text-gray-600">Loading analytics...</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-primary/10 text-primary"
-      case "completed":
-        return "bg-primary/10 text-primary"
-      case "cancelled":
-        return "bg-destructive/10 text-destructive"
-      default:
-        return "bg-muted text-muted-foreground"
-    }
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics || analytics.totalBookings === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Analytics</h1>
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600">No booking data available yet.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Leaf className="w-6 h-6 text-primary" />
-            <span className="font-bold text-foreground">GreenCircle Dashboard</span>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
+          {/* <p className="text-gray-600 mt-2">
+            Viewing as: <span className="font-semibold capitalize">{userRole}</span>
+          </p> */}
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm font-medium text-gray-600">Total Bookings</div>
+            <div className="text-3xl font-bold text-gray-900 mt-2">{analytics.totalBookings}</div>
           </div>
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              ← Back Home
-            </Button>
-          </Link>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-2">My Bookings</h1>
-          <p className="text-lg text-muted-foreground">Manage your service bookings and booking history</p>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm font-medium text-gray-600">Total Revenue</div>
+            <div className="text-3xl font-bold text-gray-900 mt-2">${analytics.totalRevenue.toFixed(2)}</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm font-medium text-gray-600">Average Booking Value</div>
+            <div className="text-3xl font-bold text-gray-900 mt-2">${analytics.avgBookingValue.toFixed(2)}</div>
+          </div>
         </div>
 
-        {bookings.length > 0 ? (
-          <>
-            {/* Upcoming Bookings */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Upcoming Services</h2>
-              <div className="space-y-4">
-                {bookings
-                  .filter((b) => b.status === "confirmed")
-                  .map((booking) => (
-                    <Card key={booking.id} className="p-6 border border-border hover:shadow-md transition">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-foreground mb-1">{booking.provider}</h3>
-                          <p className="text-muted-foreground mb-3">{booking.service}</p>
-
-                          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Calendar className="w-4 h-4 text-primary" />
-                              <span className="text-foreground">{booking.date}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Clock className="w-4 h-4 text-primary" />
-                              <span className="text-foreground">{booking.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <MapPin className="w-4 h-4 text-primary" />
-                              <span className="text-foreground">{booking.location}</span>
-                            </div>
-                            <div className="text-sm font-semibold text-foreground">{booking.price}</div>
-                          </div>
-                        </div>
-
-                        <div className="relative">
-                          <button
-                            onClick={() => setActiveMenu(activeMenu === booking.id ? null : booking.id)}
-                            className="p-2 hover:bg-secondary rounded-lg transition"
-                          >
-                            <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                          </button>
-
-                          {activeMenu === booking.id && (
-                            <div className="absolute right-0 top-full mt-2 bg-card border border-border rounded-lg shadow-lg z-10">
-                              <button className="w-full px-4 py-2 flex items-center gap-2 text-foreground hover:bg-secondary text-sm">
-                                <Phone className="w-4 h-4" />
-                                Contact Provider
-                              </button>
-                              <button className="w-full px-4 py-2 flex items-center gap-2 text-foreground hover:bg-secondary text-sm">
-                                <Edit className="w-4 h-4" />
-                                Reschedule
-                              </button>
-                              <button
-                                onClick={() => handleCancelBooking(booking.id)}
-                                className="w-full px-4 py-2 flex items-center gap-2 text-destructive hover:bg-destructive/10 text-sm border-t border-border"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Cancel Booking
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}
-                      >
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      </div>
-                    </Card>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Booking Status */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Status</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analytics.statusData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {analytics.statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
-              </div>
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Payment Methods */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analytics.paymentData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {analytics.paymentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Bookings Over Time */}
+          <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Bookings Over Time</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analytics.timeData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="bookings" stroke="#3b82f6" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Service Distribution */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Bookings by Service</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.serviceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="service" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="bookings" fill="#10b981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Revenue by Service */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Revenue by Service</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.revenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="service" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="revenue" fill="#f59e0b" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Provider Performance (for admin role) */}
+          {userRole === 'admin' && analytics.providerData.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Provider Performance</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analytics.providerData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="provider" angle={-45} textAnchor="end" height={100} />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="bookings" fill="#8b5cf6" name="Bookings" />
+                  <Bar yAxisId="right" dataKey="revenue" fill="#ec4899" name="Revenue ($)" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-
-            {/* Completed Bookings */}
-            {bookings.filter((b) => b.status === "completed").length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Completed Services</h2>
-                <div className="space-y-4">
-                  {bookings
-                    .filter((b) => b.status === "completed")
-                    .map((booking) => (
-                      <Card key={booking.id} className="p-6 border border-border">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-foreground mb-1">{booking.provider}</h3>
-                            <p className="text-sm text-muted-foreground mb-3">{booking.service}</p>
-
-                            <div className="flex flex-wrap items-center gap-4 text-sm">
-                              <span className="text-foreground">{booking.date}</span>
-                              <span className="text-foreground">{booking.price}</span>
-
-                              {booking.rating ? (
-                                <div className="flex items-center gap-1">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={`w-4 h-4 ${
-                                        i < booking.rating ? "fill-primary text-primary" : "text-muted"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                              ) : (
-                                <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                                  Leave Review
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <Card className="p-12 text-center border border-border">
-            <div className="inline-block p-4 rounded-full bg-primary/10 mb-4">
-              <Calendar className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No Bookings Yet</h3>
-            <p className="text-muted-foreground mb-6">Start booking eco-friendly services in your community</p>
-            <Link href="/browse">
-              <Button className="gap-2">
-                Browse Services
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </Card>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  )
+  );
 }

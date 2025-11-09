@@ -20,7 +20,7 @@ export default function SocketProvider({ children }) {
   const router = useRouter();
   const userRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
 
-  const baseUri = "http://localhost:3001";
+  const baseUri = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
   // Unlock audio on first user interaction
   useEffect(() => {
